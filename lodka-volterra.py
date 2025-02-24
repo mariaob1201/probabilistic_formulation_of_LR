@@ -50,6 +50,11 @@ plt.show()
 
 
 # ------------------- Estimate params of the dynamical system from such data, using odeint
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+from numba import njit
 
 @njit
 def rhs(X, t, theta):
@@ -61,8 +66,7 @@ def rhs(X, t, theta):
     dy_dt = -gamma * y + delta * x * y
     return [dx_dt, dy_dt]
 
-
-# plot model function
+# Modified plot_model function
 def plot_model(
         ax,
         x_y,
@@ -72,11 +76,25 @@ def plot_model(
         title="Hudson's Bay Company Data and\nExample Model Run",
         save_as=None
 ):
+    # Plot observed data
+    ax.plot(data.year, data.lynx, color="b", lw=lw, marker="o", markersize=12, label="Lynx (Data)")
+    ax.plot(data.year, data.hare, color="g", lw=lw, marker="+", markersize=14, label="Hare (Data)")
+
+    # Plot model predictions
     ax.plot(time, x_y[:, 1], color="b", alpha=alpha, lw=lw, label="Lynx (Model)")
     ax.plot(time, x_y[:, 0], color="g", alpha=alpha, lw=lw, label="Hare (Model)")
+
+    # Configure legend and axis
     ax.legend(fontsize=14, loc="center left", bbox_to_anchor=(1, 0.5))
+    ax.set_xlim([1900, 1920])
+    ax.set_ylim(0)
+    ax.set_xlabel("Year", fontsize=14)
+    ax.set_ylabel("Pelts (Thousands)", fontsize=14)
+    ax.set_xticks(data.year.astype(int))
+    ax.set_xticklabels(ax.get_xticks(), rotation=45)
     ax.set_title(title, fontsize=16)
 
+    # Save the figure if a filename is provided
     if save_as:
         plt.savefig(save_as, bbox_inches='tight')  # Save the figure
         plt.close()  # Close the figure to free up memory
@@ -94,9 +112,8 @@ initial_conditions = theta[-2:]
 # Call Scipy's odeint function
 x_y = odeint(func=rhs, y0=initial_conditions, t=time, args=(theta,))
 
-# Plot
+# Create plot
 _, ax = plt.subplots(figsize=(12, 4))
-plot_data(ax, data, save_as='plot-lodka-volterra/scipy-data.png', lw=0)
 plot_model(ax, x_y, save_as='plot-lodka-volterra/model-plot.png')  # Specify filename to save the model plot
 
 plt.show()  # Show the plot if needed
