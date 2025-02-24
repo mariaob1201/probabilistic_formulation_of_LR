@@ -113,3 +113,71 @@ _, ax = plt.subplots(figsize=(12, 4))
 plot_model(ax, x_y, save_as='plot-lodka-volterra/model-plot.png')  # Specify filename to save the model plot
 
 plt.show()  # Show the plot if needed
+
+
+#-------------------------- Pytensor Scan
+# Write the system of ODEs as a forward simulation solver within PyMC.
+# The way to write for-loops in PyMC is with pytensor.scan. Gradients are then supplied to the sampler via autodifferentiation.
+
+# Lotka-Volterra forward simulation model using scan
+def lv_scan_simulation_model(theta, steps_year=100, years=21):
+    # variables to control time steps
+    n_steps = years * steps_year
+    dt = 1 / steps_year
+
+    # PyMC model
+    with pm.Model() as model:
+        # Priors (these are static for testing)
+        alpha = theta[0]
+        beta = theta[1]
+        gamma = theta[2]
+        delta = theta[3]
+        xt0 = theta[4]
+        yt0 = theta[5]
+
+        # Lotka-Volterra calculation function
+        ## Similar to the right-hand-side functions used earlier
+        ## but with dt applied to the equations
+        def ode_update_function(x, y, alpha, beta, gamma, delta):
+            x_new = x + (alpha * x - beta * x * y) * dt
+            y_new = y + (-gamma * y + delta * x * y) * dt
+            return x_new, y_new
+
+        # Pytensor scan looping function
+        ## The function argument names are not intuitive in this context!
+        result, updates = pytensor.scan(
+            fn=ode_update_function,  # function
+            outputs_info=[xt0, yt0],  # initial conditions
+            non_sequences=[alpha, beta, gamma, delta],  # parameters
+            n_steps=n_steps,  # number of loops
+        )
+
+        # Put the results together and track the result
+        pm.Deterministic("result", pm.math.stack([result[0], result[1]], axis=1))
+
+    return model
+
+# Plotting function
+def plot_lotka_volterra_simulation(theta, save_as=None):
+    _, ax = plt.subplots(figsize=(12, 4))
+
+    steps_years = [12, 100, 1000, 10000]
+    for steps_year in steps_years:
+        time = np.arange(1900, 1921, 1 / steps_year)
+        model = lv_scan_simulation_model(theta, steps_year=steps_year)
+        with model:
+            prior = pm.sample_prior_predictive(1)
+        ax.plot(time, prior.prior.result[0][0].values, label=str(steps_year) + " steps/year")
+
+    ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    ax.set_title("Lotka-Volterra Forward Simulation Model with different step sizes")
+
+    # Save the figure if a filename is provided
+    if save_as:
+        plt.savefig(save_as, bbox_inches='tight')
+        plt.close()  # Close the figure to free up memory
+
+    plt.show()  # Show the plot if needed
+
+# Example usage of the plot function
+plot_lotka_volterra_simulation(theta, save_as='plot-lodka-volterra/simulation_plot.png')
