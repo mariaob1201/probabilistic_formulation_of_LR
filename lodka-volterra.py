@@ -95,12 +95,8 @@ def plot_model(
     ax.set_title(title, fontsize=16)
 
     # Save the figure if a filename is provided
-    if save_as:
-        plt.savefig(save_as, bbox_inches='tight')  # Save the figure
-        plt.close()  # Close the figure to free up memory
-
-    return ax
-
+    plt.savefig(save_as, bbox_inches='tight')  # Save the figure
+    plt.close()  # Close the figure to free up memory
 
 # Parameters
 theta = np.array([0.52, 0.026, 0.84, 0.026, 34.0, 5.9])
