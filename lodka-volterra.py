@@ -55,6 +55,9 @@ plt.show()
 #------------------- Estimate params of the dynamical system from such data, using odeint
 
 # define the right hand side of the ODE equations in the Scipy odeint signature
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
 from numba import njit
 
 
@@ -68,29 +71,42 @@ def rhs(X, t, theta):
     dy_dt = -gamma * y + delta * x * y
     return [dx_dt, dy_dt]
 
+
 # plot model function
 def plot_model(
-    ax,
-    x_y,
-    time=np.arange(1900, 1921, 0.01),
-    alpha=1,
-    lw=3,
-    title="Hudson's Bay Company Data and\nExample Model Run",
+        ax,
+        x_y,
+        time=np.arange(1900, 1921, 0.01),
+        alpha=1,
+        lw=3,
+        title="Hudson's Bay Company Data and\nExample Model Run",
+        save_as=None
 ):
     ax.plot(time, x_y[:, 1], color="b", alpha=alpha, lw=lw, label="Lynx (Model)")
     ax.plot(time, x_y[:, 0], color="g", alpha=alpha, lw=lw, label="Hare (Model)")
     ax.legend(fontsize=14, loc="center left", bbox_to_anchor=(1, 0.5))
     ax.set_title(title, fontsize=16)
+
+    if save_as:
+        plt.savefig(save_as, bbox_inches='tight')  # Save the figure
+        plt.close()  # Close the figure to free up memory
+
     return ax
 
-# note theta = alpha, beta, gamma, delta, xt0, yt0
+
+# Parameters
 theta = np.array([0.52, 0.026, 0.84, 0.026, 34.0, 5.9])
 time = np.arange(1900, 1921, 0.01)
 
-# call Scipy's odeint function
-x_y = odeint(func=rhs, y0=theta[-2:], t=time, args=(theta,))
+# Initial conditions
+initial_conditions = theta[-2:]
 
-# plot
+# Call Scipy's odeint function
+x_y = odeint(func=rhs, y0=initial_conditions, t=time, args=(theta,))
+
+# Plot
 _, ax = plt.subplots(figsize=(12, 4))
 plot_data(ax, data, save_as='plot-lodka-volterra/scipy-model.png', lw=0)
-plot_model(ax, x_y)
+plot_model(ax, x_y, save_as='plot-lodka-volterra/model-plot.png')  # Specify filename to save the model plot
+
+plt.show()  # Show the plot if needed
