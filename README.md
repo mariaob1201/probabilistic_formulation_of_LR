@@ -3,6 +3,7 @@
 I use https://bambinos.github.io/bambi/
 
 This is an example f a probabilistic re formulation of a Generalized Linear Model (GLM) – linear regression.
+
 That is, from a frequentist perspective, linear regression is typically expressed as:
  `Y = X * B + e`
 where:
@@ -13,6 +14,7 @@ where:
 
 The probabilistic formulation of this model can be written as:
 ` Y ~ N(X * B, sigma^2)`
+where Y is view as a random variable (or random vector) of which each element (data point) is distributed according to a Normal distribution. 
 
 Some advantages of a probabilistic approach include:
 1. **Priors**: We can incorporate prior knowledge by assigning probability distributions to parameters.
@@ -21,4 +23,4 @@ Some advantages of a probabilistic approach include:
     This allows us to assess the likelihood of different values for B. When data is sparse, our uncertainty in B is high,
     leading to wider posterior distributions.
 
-- Maria
+Maria, Data Scientist
